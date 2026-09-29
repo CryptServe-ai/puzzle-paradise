@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Feral But Flowering — Sliding Puzzle</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;1,400&family=Inter:wght@300;400;500&display=swap');
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #111210;
+      --surface:   #1c1e1b;
+      --border:    #2e342c;
+      --accent:    #c8e04a;
+      --accent2:   #f5a623;
+      --text:      #e8ead4;
+      --muted:     #6b7060;
+      --gap:       4px;
+      --cols:      5;
+      --rows:      5;
+      --tile-size: 104px;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 32px 16px 48px;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 28px;
+    }
+
+    header h1 {
+      font-family: 'Playfair Display', serif;
+      font-style: italic;
+      font-size: clamp(1.6rem, 4vw, 2.4rem);
+      font-weight: 400;
+      letter-spacing: .02em;
+      color: var(--text);
+    }
+
+    header p {
+      font-size: .78rem;
+      color: var(--muted);
+      margin-top: 6px;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+
+    .layout {
+      display: flex;
+      gap: 36px;
+      align-items: flex-start;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    /* ── PUZZLE ── */
+    .puzzle-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+    }
+
+    #board {
+      position: relative;
+      width:  calc(var(--cols) * var(--tile-size) + (var(--cols) - 1) * var(--gap));
+      height: calc(var(--rows) * var(--tile-size) + (var(--rows) - 1) * var(--gap));
+      background: #000;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      overflow: hidden;
+    }
+
+    .tile {
+      position: absolute;
+      width:  var(--tile-size);
+      height: var(--tile-size);
+      background-size: calc(var(--cols) * var(--tile-size)) calc(var(--rows) * var(--tile-size));
+      background-image: var(--puzzle-img);
+      cursor: pointer;
+      transition: transform .18s ease, box-shadow .18s ease;
+      border-radius: 3px;
+      user-select: none;
+    }
+
+    .tile:hover { z-index: 10; filter: brightness(1.08); }
+
+    .tile.moving {
+      transition: transform .22s cubic-bezier(.4,0,.2,1);
+    }
+
+    .tile-empty {
+      background: #000 !important;
+      cursor: default;
+    }
+
+    /* win overlay */
+    #win-overlay {
+      display: none;
+      position: absolute;
+      inset: 0;
+      background: rgba(10,12,10,.82);
+      backdrop-filter: blur(4px);
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      border-radius: 6px;
+      z-index: 99;
+    }
+    #win-overlay.show { display: flex; }
+    #win-overlay span {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.9rem;
+      font-style: italic;
+      color: var(--accent);
+    }
+    #win-overlay small { color: var(--muted); font-size: .8rem; letter-spacing:.06em }
+
+    /* ── CONTROLS ── */
+    .controls {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .btn {
+      font-family: 'Inter', sans-serif;
+      font-size: .78rem;
+      font-weight: 500;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      padding: 9px 22px;
+      border-radius: 4px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--text);
+      cursor: pointer;
+      transition: background .15s, border-color .15s, color .15s;
+    }
+
+    .btn:hover { background: var(--border); }
+
+    .btn-primary {
+      background: var(--accent);
+      color: #111;
+      border-color: var(--accent);
+    }
+    .btn-primary:hover { background: #b5cc3a; }
+
+    /* ── STATS ── */
+    .stats {
+      display: flex;
+      gap: 24px;
+    }
+    .stat {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+    }
+    .stat-val {
+      font-size: 1.5rem;
+      font-family: 'Playfair Display', serif;
+      color: var(--accent2);
+    }
+    .stat-lbl {
+      font-size: .65rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: .1em;
+    }
+
+    /* ── PREVIEW ── */
+    .preview-box {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+    }
+    .preview-box p {
+      font-size: .65rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: .1em;
+    }
+    #preview-img {
+      width: 160px;
+      height: 200px;
+      object-fit: cover;
+      border-radius: 4px;
+      border: 1px solid var(--border);
+      opacity: .72;
+    }
+
+    /* difficulty badge */
+    .badge {
+      font-size: .62rem;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      color: var(--muted);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 3px 10px;
+    }
+
+    @media (max-width: 600px) {
+      :root { --tile-size: 62px; --gap: 3px; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>Feral But Flowering</h1>
+  <p>Sliding Puzzle &nbsp;·&nbsp; 5 × 5 &nbsp;·&nbsp; <span class="badge">Aatma — Jun 18, 2026</span></p>
+</header>
+
+<div class="layout">
+
+  <div class="preview-box">
+    <p>Reference</p>
+    <img id="preview-img" src="Feral_But_Flowering.png" alt="Original artwork" />
+    <button class="btn" id="btn-toggle-preview">Hide</button>
+  </div>
+
+  <div class="puzzle-wrap">
+
+    <div class="stats">
+      <div class="stat">
+        <span class="stat-val" id="moves-val">0</span>
+        <span class="stat-lbl">Moves</span>
+      </div>
+      <div class="stat">
+        <span class="stat-val" id="time-val">0:00</span>
+        <span class="stat-lbl">Time</span>
+      </div>
+    </div>
+
+    <div id="board">
+      <div id="win-overlay">
+        <span>Solved! 🌿</span>
+        <small id="win-stats"></small>
+        <button class="btn btn-primary" onclick="shuffleBoard()">Play Again</button>
+      </div>
+    </div>
+
+    <div class="controls">
+      <button class="btn btn-primary" id="btn-shuffle" onclick="shuffleBoard()">Shuffle & Play</button>
+      <button class="btn" onclick="solveStep()">Hint</button>
+      <button class="btn" onclick="resetBoard()">Reset</button>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  // ── CONFIG ──────────────────────────────────────────
+  const COLS    = 5;
+  const ROWS    = 5;
+  const PADDING = 4;    // gap between tiles (px) — matches CSS var(--gap)
+  const IMG_SRC = 'Feral_But_Flowering.png';
+  const TOTAL   = COLS * ROWS;
+  const EMPTY   = TOTAL - 1;   // index of blank tile
+
+  // ── STATE ────────────────────────────────────────────
+  let tiles   = [];   // tiles[i] = which piece (0-based) is at cell i; EMPTY = blank
+  let moves   = 0;
+  let seconds = 0;
+  let timer   = null;
+  let started = false;
+
+  // ── DOM ──────────────────────────────────────────────
+  const board      = document.getElementById('board');
+  const movesEl    = document.getElementById('moves-val');
+  const timeEl     = document.getElementById('time-val');
+  const winOverlay = document.getElementById('win-overlay');
+  const winStats   = document.getElementById('win-stats');
+
+  // tile size read from CSS variable
+  const tileSize = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--tile-size'));
+
+  // ── IMAGE LOADING ─────────────────────────────────────
+  const img = new Image();
+  img.onload = () => {
+    createTileEls();
+    resetBoard();
+  };
+  img.onerror = () => {
+    board.innerHTML = '<p style="color:#c44;padding:20px;font-size:.85rem">Image not found. Place Feral_But_Flowering.png beside this HTML file.</p>';
+  };
+  img.src = IMG_SRC;
+
+  // ── TILE ELEMENTS ─────────────────────────────────────
+  let tileEls = [];
+
+  function createTileEls() {
+    board.querySelectorAll('.tile').forEach(t => t.remove());
+    tileEls = [];
+
+    for (let i = 0; i < TOTAL; i++) {
+      const el = document.createElement('div');
+      el.className = 'tile';
+
+      if (i !== EMPTY) {
+        // which column/row of the SOURCE image does piece i come from?
+        const srcCol = i % COLS;
+        const srcRow = Math.floor(i / COLS);
+        el.style.backgroundImage = `url("${IMG_SRC}")`;
+        el.style.backgroundSize  = `${COLS * tileSize}px ${ROWS * tileSize}px`;
+        el.style.backgroundPosition = `-${srcCol * tileSize}px -${srcRow * tileSize}px`;
+      } else {
+        el.classList.add('tile-empty');
+      }
+
+      el.addEventListener('click', () => tryMove(i));
+      board.appendChild(el);
+      tileEls.push(el);
+    }
+  }
+
+  // ── POSITIONING ───────────────────────────────────────
+  // tiles[cell] = piece index.  For each piece, we need its current cell.
+  // tileEls[piece] is the DOM element for piece `piece`.
+
+  function cellPos(cell) {
+    const col = cell % COLS;
+    const row = Math.floor(cell / COLS);
+    return {
+      x: col * (tileSize + PADDING),
+      y: row * (tileSize + PADDING)
+    };
+  }
+
+  function renderTiles(animate) {
+    // Build reverse map: piece -> cell
+    const pieceCell = new Array(TOTAL);
+    for (let c = 0; c < TOTAL; c++) pieceCell[tiles[c]] = c;
+
+    for (let piece = 0; piece < TOTAL; piece++) {
+      const el  = tileEls[piece];
+      const pos = cellPos(pieceCell[piece]);
+      if (animate) el.classList.add('moving');
+      el.style.transform = `translate(${pos.x}px, ${pos.y}px)`;
+      if (animate) setTimeout(() => el.classList.remove('moving'), 250);
+    }
+  }
+
+  // ── MOVE LOGIC ────────────────────────────────────────
+  function emptyCell() { return tiles.indexOf(EMPTY); }
+
+  function tryMove(piece) {
+    const pieceCell = tiles.indexOf(piece);
+    if (pieceCell === -1) return;
+    const blank = emptyCell();
+
+    const pc = pieceCell % COLS, pr = Math.floor(pieceCell / COLS);
+    const bc = blank % COLS,     br = Math.floor(blank / COLS);
+
+    const adj = (Math.abs(pc - bc) === 1 && pr === br) ||
+                (Math.abs(pr - br) === 1 && pc === bc);
+    if (!adj) return;
+
+    // swap
+    tiles[blank] = piece;
+    tiles[pieceCell] = EMPTY;
+
+    moves++;
+    movesEl.textContent = moves;
+    renderTiles(true);
+
+    if (!started) { startTimer(); started = true; }
+    if (isSolved()) showWin();
+  }
+
+  // ── TIMER ─────────────────────────────────────────────
+  function startTimer() {
+    clearInterval(timer);
+    timer = setInterval(() => {
+      seconds++;
+      const m = Math.floor(seconds / 60);
+      const s = seconds % 60;
+      timeEl.textContent = `${m}:${String(s).padStart(2,'0')}`;
+    }, 1000);
+  }
+
+  function stopTimer() { clearInterval(timer); }
+
+  // ── WIN ───────────────────────────────────────────────
+  function isSolved() {
+    for (let i = 0; i < TOTAL; i++) if (tiles[i] !== i) return false;
+    return true;
+  }
+
+  function showWin() {
+    stopTimer();
+    winStats.textContent = `${moves} moves · ${timeEl.textContent}`;
+    winOverlay.classList.add('show');
+  }
+
+  // ── RESET / SHUFFLE ───────────────────────────────────
+  function resetBoard() {
+    winOverlay.classList.remove('show');
+    stopTimer();
+    moves = 0; seconds = 0; started = false;
+    movesEl.textContent = '0';
+    timeEl.textContent  = '0:00';
+    tiles = Array.from({length: TOTAL}, (_,i) => i);
+    renderTiles(false);
+  }
+
+  function shuffleBoard() {
+    winOverlay.classList.remove('show');
+    stopTimer();
+    moves = 0; seconds = 0; started = false;
+    movesEl.textContent = '0';
+    timeEl.textContent  = '0:00';
+
+    // Perform random solvable shuffle via moves
+    tiles = Array.from({length: TOTAL}, (_,i) => i);
+    let blank = EMPTY; // EMPTY piece starts at cell EMPTY (last cell)
+
+    const SHUFFLES = 500;
+    for (let k = 0; k < SHUFFLES; k++) {
+      const neighbors = getNeighborCells(blank);
+      const chosen = neighbors[Math.floor(Math.random() * neighbors.length)];
+      // swap blank cell and chosen cell
+      const piece = tiles[chosen];
+      tiles[blank] = piece;
+      tiles[chosen] = EMPTY;
+      blank = chosen;
+    }
+
+    renderTiles(false);
+  }
+
+  function getNeighborCells(cell) {
+    const col = cell % COLS, row = Math.floor(cell / COLS);
+    const result = [];
+    if (col > 0)       result.push(cell - 1);
+    if (col < COLS-1)  result.push(cell + 1);
+    if (row > 0)       result.push(cell - COLS);
+    if (row < ROWS-1)  result.push(cell + COLS);
+    return result;
+  }
+
+  // ── HINT ──────────────────────────────────────────────
+  // Simple hint: find the first misplaced tile adjacent to the blank and move it.
+  function solveStep() {
+    if (isSolved()) return;
+    const blank = emptyCell();
+    const neighbors = getNeighborCells(blank);
+    // prefer a neighbor whose piece belongs in that spot if we move it
+    let chosen = null;
+    for (const cell of neighbors) {
+      if (tiles[cell] !== EMPTY && tiles[cell] !== cell) { chosen = cell; break; }
+    }
+    if (!chosen) chosen = neighbors[0];
+    const piece = tiles[chosen];
+    tiles[blank] = piece;
+    tiles[chosen] = EMPTY;
+    moves++;
+    movesEl.textContent = moves;
+    renderTiles(true);
+    if (!started) { startTimer(); started = true; }
+    if (isSolved()) showWin();
+  }
+
+  // ── KEYBOARD ──────────────────────────────────────────
+  document.addEventListener('keydown', e => {
+    const blank = emptyCell();
+    const bc = blank % COLS, br = Math.floor(blank / COLS);
+    let target = -1;
+
+    if (e.key === 'ArrowLeft'  && bc < COLS-1) target = blank + 1;
+    if (e.key === 'ArrowRight' && bc > 0)      target = blank - 1;
+    if (e.key === 'ArrowUp'    && br < ROWS-1) target = blank + COLS;
+    if (e.key === 'ArrowDown'  && br > 0)      target = blank - COLS;
+
+    if (target !== -1) {
+      e.preventDefault();
+      tryMove(tiles[target]);
+    }
+  });
+
+  // ── PREVIEW TOGGLE ────────────────────────────────────
+  const previewImg    = document.getElementById('preview-img');
+  const btnToggle     = document.getElementById('btn-toggle-preview');
+  btnToggle.addEventListener('click', () => {
+    const hidden = previewImg.style.visibility === 'hidden';
+    previewImg.style.visibility = hidden ? 'visible' : 'hidden';
+    btnToggle.textContent = hidden ? 'Hide' : 'Show';
+  });
+</script>
+</body>
+</html>
