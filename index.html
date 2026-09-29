@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Three picture puzzles, one peaceful place to play. Explore Neighbourhood, Feral But Flowering, and A Picture of Peace.">
+  <title>Puzzle Paradise</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; background: #f4f1e9; color: #243d35; font-family: system-ui, sans-serif; }
+    main { max-width: 1150px; margin: auto; padding: 72px 24px; }
+    .eyebrow { text-transform: uppercase; letter-spacing: .2em; font-size: .75rem; font-weight: 700; }
+    h1 { font-family: Georgia, serif; font-size: clamp(3rem, 8vw, 5.5rem); font-weight: 400; margin: 16px 0; }
+    .intro { max-width: 560px; line-height: 1.7; color: #52645b; }
+    .games { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-top: 48px; }
+    .game { display: flex; flex-direction: column; overflow: hidden; border: 1px solid #d9ded2; border-radius: 18px; background: #fffdf8; color: inherit; text-decoration: none; transition: transform .2s; }
+    .game:hover { transform: translateY(-5px); }
+    .game:focus-visible { outline: 3px solid #277e5c; outline-offset: 5px; }
+    .game img { width: 100%; height: 250px; object-fit: cover; }
+    .details { padding: 24px; display: flex; flex-direction: column; flex: 1; }
+    h2 { font-family: Georgia, serif; font-size: 1.6rem; font-weight: 400; margin: 0 0 12px; }
+    .details p { color: #52645b; line-height: 1.6; margin: 0 0 24px; }
+    .play { margin-top: auto; font-weight: 650; }
+    footer { margin-top: 48px; color: #52645b; font-size: .85rem; }
+    @media (max-width: 760px) { .games { grid-template-columns: 1fr; } main { padding-top: 40px; } .game img { height: 280px; } }
+    @media (prefers-reduced-motion: reduce) { .game { transition: none; } }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <p class="eyebrow">A little focus. A little discovery.</p>
+      <h1>Puzzle Paradise</h1>
+      <p class="intro">Three pictures waiting to come together. Choose your scene, settle in, and find the joy in every piece.</p>
+    </header>
+    <nav class="games" aria-label="Choose a puzzle">
+      <a class="game" href="neighbourhood-puzzle/index.html">
+        <img src="neighbourhood-puzzle/neighbourhood.png" alt="An illustrated neighbourhood scene" width="400" height="250">
+        <div class="details"><h2>Neighbourhood</h2><p>Explore a scene inspired by Downers Grove. Swap 25 pieces to bring the neighbourhood together.</p><span class="play">Play Neighbourhood &rarr;</span></div>
+      </a>
+      <a class="game" href="feral-puzzle/index.html">
+        <img src="feral-puzzle/Feral_But_Flowering.png" alt="Feral But Flowering artwork by Aatma" width="400" height="250">
+        <div class="details"><h2>Feral But Flowering</h2><p>A chameleon, a butterfly, and a botanical world. Slide 24 tiles to restore Aatma’s surreal artwork.</p><span class="play">Play Feral But Flowering &rarr;</span></div>
+      </a>
+      <a class="game" href="peace-puzzle/index.html">
+        <img src="peace-puzzle/peacepuzzle.png" alt="Lord Krishna and Lord Jesus embracing" width="400" height="250">
+        <div class="details"><h2>A Picture of Peace</h2><p>A moment of connection in golden light. Swap 25 pieces to reveal the complete picture.</p><span class="play">Play A Picture of Peace &rarr;</span></div>
+      </a>
+    </nav>
+    <footer>No installation needed. Choose a puzzle to begin.</footer>
+  </main>
+</body>
+</html>
