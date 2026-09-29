@@ -8,7 +8,7 @@ One umbrella repository for three independent browser puzzles. Open `index.html`
 | Feral But Flowering | `feral-puzzle/` | [CryptServe-ai/feral-puzzle](https://github.com/CryptServe-ai/feral-puzzle) |
 | A Picture of Peace | `peace-puzzle/` | [CryptServe-ai/peace-puzzle](https://github.com/CryptServe-ai/peace-puzzle) |
 
-Each folder contains the original game, artwork, and README. The game files are unchanged, so their controls and relative image paths continue to work. Use your browser’s Back button to return to the chooser. Feral uses optional Google Fonts; its game and artwork are local.
+Each folder contains the original game, artwork, and README. Each game has a “Back to Puzzle Paradise” link above its title to return to the chooser. Original game logic, controls, and relative image paths are retained. Feral uses optional Google Fonts; its game and artwork are local.
 
 ## Local preview
 
@@ -31,7 +31,7 @@ Imported revisions:
 
 ## Hosting
 
-This is a static repository. It can be served from its root on any static host. To use GitHub Pages, select **Settings → Pages → Deploy from a branch → main → / (root)** in the new repository. Hosting is optional and is not enabled by this import.
+This is a static repository. It can be served from its root on any static host. To use GitHub Pages, select **Settings → Pages → Deploy from a branch → main → / (root)** in the new repository. The collection is live at https://cryptserve-ai.github.io/puzzle-paradise/.
 
 ## Artwork and licensing
 
